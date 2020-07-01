@@ -7,6 +7,7 @@ from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 def create_user(**params):
     return get_user_model().objects.create_user(**params)
@@ -14,6 +15,7 @@ def create_user(**params):
 class PublicUserApiTests(TestCase):
     # test the users API (public)
     def setUp(self):
+        # 在TestCase裡 setUp = 會在下面的方法執行前 先執行setup類似於unity start
         self.client = APIClient()
     
     def test_create_valid_user_success(self):
@@ -86,5 +88,50 @@ class PublicUserApiTests(TestCase):
         res = self.client.post(TOKEN_URL,{'email':'one','password':''})
         self.assertNotIn('token',res.data)
         self.assertEqual(res.status_code,status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_user_unauthorized(self):
+        # test that authentucation is required for user
+        res = self.client.get(ME_URL)
+        self.assertEqual(res.status_code,status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserApiTests(TestCase):
+    # Test API request that require authentication
+    def setUp(self):
+        # 在TestCase裡 setUp = 會在下面的方法執行前 先執行setup類似於unity start
+        self.user = create_user(
+            email='test@loadonappdev.com',
+            password = 'testpass',
+            name = 'name'
+        )
+        self.client = APIClient()
+        # 強制驗證用戶 
+        self.client.force_authenticate(user=self.user)
+    
+    def test_retrieve_profile_success(self):
+        # est retrieving profile for logged in used
+        res = self.client.get(ME_URL)
+        self.assertEqual(res.status_code,status.HTTP_200_OK)
+        self.assertEqual(res.data,{
+            'name':self.user.name,
+            'email':self.user.email
+        })
+
+    def test_post_me_not_allowed(self):
+        # test that POST is not allowed on the me url
+        res = self.client.post(ME_URL,{})
+        self.assertEqual(res.status_code,status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def test_update_user_profile(self):
+        # test updating the user profile for authenticated user
+        payload = {'name':'new name','password':'newpassword123'}
+        res = self.client.patch(ME_URL,payload)
+        # patch 的意思 是指 只修改單一欄位時 前端不須提交完整model 就可以提交給後端 put就要傳完整的info
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name , payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(res.status_code,status.HTTP_200_OK)
+
+
 
 
