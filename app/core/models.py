@@ -43,3 +43,17 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+class Ingredient(models.Model):
+    # Ingredient to be used in a recipe
+    name = models.CharField(max_length = 255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.CASCADE
+    )
+    # 這裡 on_delete 的 models.CASCADE 的意思 
+    # 例如： 一個攤販會賣各式各樣的食物，當它今天收店了，你就也再也吃不到它賣的每一樣食物了 
+    # 這些連帶的資料也會一併刪除
+
+    def __str__(self):
+        return self.name
