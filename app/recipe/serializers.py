@@ -34,3 +34,9 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'price','link'
         )
         read_only_fields = ('id',)
+
+class RecipeDetailSerializer(RecipeSerializer):
+    # Serialize a recipe detail
+    # 類似 c# override 複寫
+    ingredients = IngredientSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True,read_only=True)
