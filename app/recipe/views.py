@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import viewsets ,mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from core.models import Tag,Ingredient
+from core.models import Tag,Ingredient,Recipe
 from recipe import serializers
 
 # 將下面兩類整合重複的code
@@ -67,3 +67,15 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
 #     def perform_create(self,serializer):
 #         # create a new ingredient
 #         serializer.save(user=self.request.user)
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    # Manage recipe in the database
+    serializer_class = serializers.RecipeSerializer
+    queryset = Recipe.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    
+    def get_queryset(self):
+        # Retrieve the recipes for the authenticated user
+        return self.queryset.filter(user=self.request.user)
