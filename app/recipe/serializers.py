@@ -40,3 +40,12 @@ class RecipeDetailSerializer(RecipeSerializer):
     # 類似 c# override 複寫
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True,read_only=True)
+
+
+class RecipeImageSerializer(serializers.ModelSerializer):
+    # Serializer for uploading images to recipes
+
+    class Meta:
+        model = Recipe
+        fields = ('id','image')
+        ready_only_fields = ('id',)
